@@ -250,7 +250,7 @@ export default function Record() {
                       onChange={(e) => updateForm({ period: e.target.value })}
                     />
                     <label
-                      htmlFor="period0"
+                      htmlFor="period3"
                       className="ml-3 block text-sm font-medium leading-6 text-slate-900 mr-4"
                     >
                       3
@@ -265,7 +265,7 @@ export default function Record() {
                       onChange={(e) => updateForm({ period: e.target.value })}
                     />
                     <label
-                      htmlFor="period0"
+                      htmlFor="period4"
                       className="ml-3 block text-sm font-medium leading-6 text-slate-900 mr-4"
                     >
                       4
