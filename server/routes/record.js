@@ -7,17 +7,25 @@ import db from "../db/connection.js";
 import { ObjectId } from "mongodb";
 
 // The initial name of the connection
-const PIECE_COLLECTION_NAME = "truncatedinitialdata"
+const PIECE_COLLECTION_NAME = "initialdata"
 
 // router is an instance of the express router.
 // We use it to define our routes.
 // The router will be added as a middleware and will take control of requests starting with path /record.
 const router = express.Router();
 
+const initialSortOrder = {
+  period: 1,
+  composer: 1,
+  work: 1,
+  performers: 1,
+  time: 1,
+}
+
 // This section will help you get a list of all the records.
 router.get("/", async (req, res) => {
   let collection = await db.collection(PIECE_COLLECTION_NAME);
-  let results = await collection.find({}).toArray();
+  let results = await collection.find({}).sort(initialSortOrder).limit(10000).toArray();
   res.send(results).status(200);
 });
 
@@ -28,10 +36,57 @@ router.get("/limited", async (req, res) => {
     res.send(results).status(200);
 });
 
+// This section will search for records matching the given term.
+router.post("/search", async (req, res) => {
+  const path = req.body.searchField === "*" ? {wildcard: "*"} : req.body.searchField
+  const queryText = req.body.queryText
+
+  const searchQuery = [
+    {
+      $search: {
+        "text": {
+          "query": queryText,
+          "path": path,
+        }
+      }
+    }
+  ]
+  console.log(searchQuery[0])
+  // console.log(searchQuery.$search.text)
+  let collection = await db.collection(PIECE_COLLECTION_NAME);
+  let results = await collection.aggregate(searchQuery).toArray();
+  res.send(results).status(200);
+});
+
 router.get("/recommendation/:id", async (req, res) => {
-    let collection = await db.collection(PIECE_COLLECTION_NAME);
-    let results = await collection.aggregate([{ $sample: { size: 3 }}]).toArray();
+  let collection = await db.collection(PIECE_COLLECTION_NAME);
+  let query = { _id: new ObjectId(req.params.id) };
+  let result = [await collection.findOne(query)];
+
+  if (!result) res.send("Not found").status(404);
+  else res.send(result).status(200);
+});
+
+router.get("/recommendation/composer/:id", async (req, res) => {
+  let collection = await db.collection(PIECE_COLLECTION_NAME);
+  let query = { _id: new ObjectId(req.params.id) };
+  let og_result = await collection.findOne(query);
+  if (!og_result) res.send("Not found").status(404);
+  else {
+    let results = await collection.aggregate([{$match: {composer: og_result.composer}}, {$sample: {size: 3}}]).toArray();
     res.send(results).status(200);
+  }
+});
+
+router.get("/recommendation/period/:id", async (req, res) => {
+  let collection = await db.collection(PIECE_COLLECTION_NAME);
+  let query = { _id: new ObjectId(req.params.id) };
+  let og_result = await collection.findOne(query);
+  if (!og_result) res.send("Not found").status(404);
+  else {
+    let results = await collection.aggregate([{$match: {period: og_result.period}}, {$sample: {size: 3}}]).limit(3).toArray();
+    res.send(results).status(200);
+  }
 });
 
 // This section will help you get a single record by id

@@ -2,38 +2,29 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 
+const RecordCell = (props) => (
+  <td className="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
+    {props.text}
+  </td>
+);
+
 const Record = (props) => (
     <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-      <td className="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
-        {props.record.label}
-      </td>
-      <td className="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
-        {props.record.format}
-      </td>
-      <td className="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
-        {props.record.number}
-      </td>
-      <td className="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
-        {props.record.period}
-      </td>
-      <td className="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
-        {props.record.composer}
-      </td>
-      <td className="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
-        {props.record.work}
-      </td>
-      <td className="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
-        {props.record.performers}
-      </td>
-      <td className="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
-        {props.record.time}
-      </td>
+      <RecordCell text={props.record.label}/>
+      <RecordCell text={props.record.format}/>
+      <RecordCell text={props.record.number}/>
+      <RecordCell text={props.record.period}/>
+      <RecordCell text={props.record.composer}/>
+      <RecordCell text={props.record.work}/>
+      <RecordCell text={props.record.performers}/>
+      <RecordCell text={props.record.time}/>
     </tr>
 );
 
 export default function RecommendationList() {
     const [originalRecord, setOriginalRecord] = useState(false)
     const [records, setRecords] = useState([]);
+    const [currentRecommendations, setCurrentRecommendations] = useState("composer")
   
     const params = useParams();
     const navigate = useNavigate();
@@ -66,17 +57,21 @@ export default function RecommendationList() {
     // This method fetches the records from the database.
     useEffect(() => {
       async function getRecords() {
-        const response = await fetch(`http://localhost:5050/record/recommendation/${params.id.toString()}`);
-        if (!response.ok) {
-          const message = `An error occurred: ${response.statusText}`;
+        const composerResponse = await fetch(`http://localhost:5050/record/recommendation/period/${params.id.toString()}`);
+        if (!composerResponse.ok) {
+          const message = `An error occurred: ${composerResponse.statusText}`;
           console.error(message);
           return;
         }
-        const records = await response.json();
-        setRecords(records);
+        const composerRecords = await composerResponse.json();
+        // const records = {
+        //   "magic": magicRecords,
+        //   "composer": composerRecords,
+        //   "period": artistRecords
+        // }
+        setRecords(composerRecords);
       }
       getRecords();
-      console.log("gotRecords")
       return;
     }, []);
     
@@ -101,13 +96,13 @@ export default function RecommendationList() {
         >
           &lt; Go Back
         </Link>
-        <h3 className="text-lg font-semibold p-4">{ originalRecord ? `Recommendations for ${originalRecord.composer} - ${originalRecord.work}` : "Loading..."}</h3>
+        <h3 className="text-lg font-semibold">{ originalRecord ? `Recommendations for ${originalRecord.composer} - ${originalRecord.work}` : "Loading..."}</h3>
         <p className="mt-1 text-sm leading-6 text-slate-60">Based on the piece you selected, you may like:</p>
         <div className="border rounded-lg overflow-hidden">
             <div className="relative w-full overflow-auto">
             <table className="w-full caption-bottom text-sm">
                 <thead className="[&amp;_tr]:border-b">
-                <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                  <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
                     Label
                     </th>
@@ -132,10 +127,10 @@ export default function RecommendationList() {
                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
                     Time
                     </th>
-                </tr>
+                  </tr>
                 </thead>
                 <tbody className="[&amp;_tr:last-child]:border-0">
-                {recordList()}
+                  {recordList()}
                 </tbody>
             </table>
             </div>

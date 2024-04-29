@@ -256,7 +256,7 @@ export default function Record() {
                       3
                     </label>
                     <input
-                      id="period0"
+                      id="period4"
                       name="positionOptions"
                       type="radio"
                       value="4"
