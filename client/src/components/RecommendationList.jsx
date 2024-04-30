@@ -23,8 +23,9 @@ const Record = (props) => (
 
 export default function RecommendationList() {
     const [originalRecord, setOriginalRecord] = useState(false)
-    const [records, setRecords] = useState([]);
-    const [currentRecommendations, setCurrentRecommendations] = useState("composer")
+    const [composerRecords, setComposerRecords] = useState([]);
+    const [periodRecords, setPeriodRecords] = useState([]);
+    const [discRecords, setDiscRecords] = useState([])
   
     const params = useParams();
     const navigate = useNavigate();
@@ -54,30 +55,43 @@ export default function RecommendationList() {
       return;
     }, []);
 
-    // This method fetches the records from the database.
+    // Recommendations State:
     useEffect(() => {
       async function getRecords() {
-        const composerResponse = await fetch(`http://localhost:5050/record/recommendation/period/${params.id.toString()}`);
+        const composerResponse = await fetch(`http://localhost:5050/record/recommendation/composer/${params.id.toString()}`);
         if (!composerResponse.ok) {
           const message = `An error occurred: ${composerResponse.statusText}`;
           console.error(message);
           return;
         }
         const composerRecords = await composerResponse.json();
-        // const records = {
-        //   "magic": magicRecords,
-        //   "composer": composerRecords,
-        //   "period": artistRecords
-        // }
-        setRecords(composerRecords);
+        setComposerRecords(composerRecords);
+
+        const periodResponse = await fetch(`http://localhost:5050/record/recommendation/period/${params.id.toString()}`);
+        if (!periodResponse.ok) {
+          const message = `An error occurred: ${periodResponse.statusText}`;
+          console.error(message);
+          return;
+        }
+        const periodRecords = await periodResponse.json();
+        setPeriodRecords(periodRecords);
+
+        const discResponse = await fetch(`http://localhost:5050/record/recommendation/disc/${params.id.toString()}`);
+        if (!discResponse.ok) {
+          const message = `An error occurred: ${discResponse.statusText}`;
+          console.error(message);
+          return;
+        }
+        const discRecords = await discResponse.json();
+        setDiscRecords(discRecords);
       }
       getRecords();
       return;
     }, []);
     
     // This method will map out the records of the recommendation on the table
-    function recordList() {
-        return records.map((record) => {
+    function recordList(ls) {
+        return ls.map((record) => {
         return (
             <Record
             record={record}
@@ -96,44 +110,120 @@ export default function RecommendationList() {
         >
           &lt; Go Back
         </Link>
-        <h3 className="text-lg font-semibold">{ originalRecord ? `Recommendations for ${originalRecord.composer} - ${originalRecord.work}` : "Loading..."}</h3>
-        <p className="mt-1 text-sm leading-6 text-slate-60">Based on the piece you selected, you may like:</p>
+        <h3 className="text-xl mt-4 font-semibold">{ originalRecord ? `Recommendations for ${originalRecord.composer} - ${originalRecord.work}` : "Loading..."}</h3>
+        <p className="mt-4 text-md leading-6 text-slate-60">Based on the piece you selected, you may like some of these pieces from the same time period:</p>
         <div className="border rounded-lg overflow-hidden">
-            <div className="relative w-full overflow-auto">
+          <div className="relative w-full overflow-auto">
             <table className="w-full caption-bottom text-sm">
-                <thead className="[&amp;_tr]:border-b">
-                  <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
-                    Label
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
-                    Format
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
-                    Number
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
-                    Period
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
-                    Composer
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
-                    Work
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
-                    Performers
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
-                    Time
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="[&amp;_tr:last-child]:border-0">
-                  {recordList()}
-                </tbody>
+              <thead className="[&amp;_tr]:border-b">
+                <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Label
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Format
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Number
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Period
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Composer
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Work
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Performers
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Time
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="[&amp;_tr:last-child]:border-0">
+                {recordList(periodRecords)}
+              </tbody>
             </table>
-            </div>
+          </div>
+        </div>
+        <p className="mt-6 text-md leading-6 text-slate-60">You may also like these pieces also composed by {originalRecord.composer}:</p>
+        <div className="border rounded-lg overflow-hidden">
+          <div className="relative w-full overflow-auto">
+            <table className="w-full caption-bottom text-sm">
+              <thead className="[&amp;_tr]:border-b">
+                <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Label
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Format
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Number
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Period
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Composer
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Work
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Performers
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Time
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="[&amp;_tr:last-child]:border-0">
+                {recordList(composerRecords)}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p className="mt-6 text-md leading-6 text-slate-60">And here are some pieces from the same {originalRecord.format} ({originalRecord.label}: {originalRecord.number}), if we could find any:</p>
+        <div className="border rounded-lg overflow-hidden">
+          <div className="relative w-full overflow-auto">
+            <table className="w-full caption-bottom text-sm">
+              <thead className="[&amp;_tr]:border-b">
+                <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Label
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Format
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Number
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Period
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Composer
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Work
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Performers
+                  </th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                  Time
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="[&amp;_tr:last-child]:border-0">
+                {recordList(discRecords)}
+              </tbody>
+            </table>
+          </div>
         </div>
         </>
     );

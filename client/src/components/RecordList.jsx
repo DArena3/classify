@@ -1,18 +1,16 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+// Piece State: A concrete representation of a single field of a piece
 const RecordCell = (props) => {
-  const [hidden, setHidden] = useState(true)
   return (
-    <td 
-      className="p-3 align-middle [&amp;:has([role=checkbox])]:pr-0" 
-      onClick={() => setHidden(false)}
-    >
+    <td className="p-3 align-middle [&amp;:has([role=checkbox])]:pr-0">
         {props.text}
     </td>
   )
 }
 
+// Piece State: The concrete representation of a single piece
 const Record = (props) => (
   <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
     <RecordCell text={props.record.label}/>
@@ -52,11 +50,12 @@ const Record = (props) => (
 );
 
 export default function RecordList() {
+  // Piece State, Catalog State: the pieces to be displayed as well as parameters of what records should be displayed
   const [first, setFirst] = useState(true);
   const [records, setRecords] = useState([]);
   const [recordsLoading, setRecordsLoading] = useState(true);
   const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  const [pageSize, setPageSize] = useState(20);
   const [form, setForm] = useState({
     queryText: "",
     searchField: "*",
@@ -68,38 +67,49 @@ export default function RecordList() {
     });
   }
 
+  async function resetForm(e) {
+    e.preventDefault();
+    setPageNumber(1);
+    setRecordsLoading(true);
+    getRecords();
+  }
+
+  // Catalog Action: Search
   async function onSubmit(e) {
     e.preventDefault();
     const query = { ...form };
-    setRecordsLoading(true);
-    setPageNumber(1);
-    try {
-      let response;
-      response = await fetch("http://localhost:5050/record/search", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(query),
-      });
+    if (query.queryText && query.searchField) {
+      setRecordsLoading(true);
+      setPageNumber(1);
+      try {
+        let response;
+        response = await fetch("http://localhost:5050/record/search", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(query),
+        });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const newRecords = await response.json();
+        console.log(newRecords)
+        setRecords(newRecords);
+        setRecordsLoading(false);
+        console.log("1")
+      } catch (error) {
+        console.error('A problem occurred with your fetch operation: ', error);
+        setRecords(records)
+        console.log("2")
       }
-      const newRecords = await response.json();
-      console.log(newRecords)
-      setRecords(newRecords);
-      setRecordsLoading(false);
-      console.log("1")
-    } catch (error) {
-      console.error('A problem occurred with your fetch operation: ', error);
-      setRecords(records)
-      console.log("2")
     }
   }
 
   function getMaxPages() {return records.length % pageSize === 0 ? Math.floor(records.length / pageSize) : Math.floor(records.length / pageSize) + 1}
 
+  // Catalog Actions: Change Page View
   function validateUpdatePageNumber(input) {
     if (input === '') {
       setPageNumber(1)
@@ -122,28 +132,28 @@ export default function RecordList() {
     }
   }
 
+  async function getRecords() {
+    const response = await fetch(`http://localhost:5050/record`);
+    if (!response.ok) {
+      const message = `An error occurred: ${response.statusText}`;
+      console.error(message);
+      return;
+    }
+    const records = await response.json();
+    setRecords(records);
+    setRecordsLoading(false);
+  }
+
   // This method fetches the records from the database.
   useEffect(() => {
-    async function getRecords() {
-      const response = await fetch(`http://localhost:5050/record`);
-      if (!response.ok) {
-        const message = `An error occurred: ${response.statusText}`;
-        console.error(message);
-        return;
-      }
-      const records = await response.json();
-      setRecords(records);
-      setRecordsLoading(false);
-      setFirst(false)
-    }
     if (first) {
       getRecords()
-      console.log("1")
+      setFirst(false)
     }
     return;
   }, [records.length]);
 
-  // This method will delete a record
+  // Piece Action: Delete Piece
   async function deleteRecord(id) {
     await fetch(`http://localhost:5050/record/${id}`, {
       method: "DELETE",
@@ -152,7 +162,7 @@ export default function RecordList() {
     setRecords(newRecords);
   }
 
-  // This method will map out the records on the table
+  // Catalog State: Display the current page of the returned records
   function recordList(pageNumber, pageSize) {
     const start = (pageNumber - 1) * pageSize;
     const end = Math.min(start + pageSize, records.length + 1)
@@ -174,10 +184,16 @@ export default function RecordList() {
     </th>
   )
 
+  const DeleteDialog = (props) => (
+    <dialog>
+
+    </dialog>
+  )
+
   // This following section will display the table with the records of individuals.
   return (
     <>
-      <h2 className="text-lg font-semibold p-4"><span className="font-bold">View Catalog</span></h2>
+      <h2 className="text-xl font-semibold p-4"><span className="font-bold">Catalog</span></h2>
       {recordsLoading ? 
         <p className="text-md p-2 ml-4 m-2">Loading...</p> :
         <form className="ml-4">
@@ -204,6 +220,16 @@ export default function RecordList() {
           >
             Next Page &gt;
           </button>
+          <button
+            className="inline-flex items-center justify-center whitespace-nowrap text-md font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-slate-400 hover:text-accent-foreground h-9 rounded-md px-3 cursor-pointer ml-4 bg-slate-500 text-white"
+            type="reset"
+            onClick={(e) => {resetForm(e); setForm({
+              queryText: "",
+              searchField: "*",
+            })}}
+          >
+            Reset
+          </button>
           <span className="float-right">
             Showing
             <input
@@ -226,7 +252,7 @@ export default function RecordList() {
           onChange={(e) => updateForm({ queryText: e.target.value })}
         ></input>
         <button
-          className="inline-flex items-center justify-center whitespace-nowrap text-md font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-red-700 hover:text-accent-foreground h-9 rounded-md px-3 bg-red-800 text-white"
+          className="inline-flex items-center justify-center whitespace-nowrap text-md h-10 font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-red-700 hover:text-accent-foreground h-9 rounded-md px-3 bg-red-800 text-white"
           type="submit"
         >
           Search

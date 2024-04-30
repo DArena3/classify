@@ -40,22 +40,22 @@ router.get("/limited", async (req, res) => {
 router.post("/search", async (req, res) => {
   const path = req.body.searchField === "*" ? {wildcard: "*"} : req.body.searchField
   const queryText = req.body.queryText
-
-  const searchQuery = [
-    {
-      $search: {
-        "text": {
-          "query": queryText,
-          "path": path,
+  if (!path || !queryText) res.send("Not found").status(404);
+  else {
+    const searchQuery = [
+      {
+        $search: {
+          "text": {
+            "query": queryText,
+            "path": path,
+          }
         }
       }
-    }
-  ]
-  console.log(searchQuery[0])
-  // console.log(searchQuery.$search.text)
-  let collection = await db.collection(PIECE_COLLECTION_NAME);
-  let results = await collection.aggregate(searchQuery).toArray();
-  res.send(results).status(200);
+    ]
+    let collection = await db.collection(PIECE_COLLECTION_NAME);
+    let results = await collection.aggregate(searchQuery).toArray();
+    res.send(results).status(200);
+  }
 });
 
 router.get("/recommendation/:id", async (req, res) => {
@@ -73,7 +73,7 @@ router.get("/recommendation/composer/:id", async (req, res) => {
   let og_result = await collection.findOne(query);
   if (!og_result) res.send("Not found").status(404);
   else {
-    let results = await collection.aggregate([{$match: {composer: og_result.composer}}, {$sample: {size: 3}}]).toArray();
+    let results = await collection.aggregate([{$match: {_id: { $ne: og_result._id }, composer: og_result.composer}}, {$sample: {size: 3}}]).toArray();
     res.send(results).status(200);
   }
 });
@@ -82,9 +82,68 @@ router.get("/recommendation/period/:id", async (req, res) => {
   let collection = await db.collection(PIECE_COLLECTION_NAME);
   let query = { _id: new ObjectId(req.params.id) };
   let og_result = await collection.findOne(query);
+  if (!og_result || !og_result.time) res.send("Not found").status(404);
+  else {
+    const origin = isNaN(og_result.time) ? 20.0 : parseFloat(og_result.time)
+    const pivot = isNaN(og_result.time) ? 5.0 : parseFloat(og_result.time) / 4
+    let results = await collection.aggregate([
+      {$search: {
+          compound: {
+            must: [
+              {
+                equals: {
+                  path: "period",
+                  value: og_result.period
+                }
+              },
+              {
+                moreLikeThis: {
+                  like: [
+                    { work: og_result.work },
+                  ]
+                }
+              },
+              {
+                near: {
+                  path: "time",
+                  origin: origin,
+                  pivot: pivot,
+                  score: { boost: { value: 10 } }
+                }
+              }
+            ], 
+            mustNot: [
+              {
+                equals: {
+                  path: "_id",
+                  value: og_result._id
+                }
+              },
+              {
+                text: {
+                  query: og_result.work,
+                  path: { value: "work", multi: "keywordAnalyzer" },
+                }
+              }
+            ],
+          }
+        }
+      },
+      {
+        $limit: 5
+      }
+    ]).toArray();
+    res.send(results).status(200);
+  }
+});
+
+router.get("/recommendation/disc/:id", async (req, res) => {
+  let collection = await db.collection(PIECE_COLLECTION_NAME);
+  let query = { _id: new ObjectId(req.params.id) };
+  let og_result = await collection.findOne(query);
   if (!og_result) res.send("Not found").status(404);
   else {
-    let results = await collection.aggregate([{$match: {period: og_result.period}}, {$sample: {size: 3}}]).limit(3).toArray();
+    let results = await collection.aggregate([{$match: {_id: { $ne: og_result._id }, label: og_result.label, number: og_result.number}}]).toArray();
     res.send(results).status(200);
   }
 });

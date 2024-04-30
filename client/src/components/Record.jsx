@@ -81,7 +81,7 @@ export default function Record() {
     }
   }
 
-  // This following section will display the form that takes the input from the user.
+  // Piece State, Piece Actions: This page allows the user to Insert or Edit a piece
   return (
     <>
       <Link
@@ -134,7 +134,7 @@ export default function Record() {
               >
                 Label
               </label>
-              <div className="mt-2">
+              <div>
                 <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-slate-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
                   <input
                     type="text"
@@ -155,7 +155,7 @@ export default function Record() {
               >
                 Format
               </label>
-              <div className="mt-2">
+              <div>
                 <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-slate-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
                   <input
                     type="text"
@@ -176,7 +176,7 @@ export default function Record() {
               >
                 Number
               </label>
-              <div className="mt-2">
+              <div>
                 <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-slate-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
                   <input
                     type="text"
@@ -191,7 +191,7 @@ export default function Record() {
               </div>
             </div>
             <div>
-              <fieldset className="mt-4">
+              <fieldset>
                 <legend className="block text-sm font-medium leading-6 text-slate-900">Period</legend>
                 <div className="space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0">
                   <div className="flex items-center">
@@ -311,7 +311,7 @@ export default function Record() {
               >
                 Composer
               </label>
-              <div className="mt-2">
+              <div>
                 <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-slate-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
                   <input
                     type="text"
@@ -332,7 +332,7 @@ export default function Record() {
               >
                 Work
               </label>
-              <div className="mt-2">
+              <div>
                 <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-slate-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
                   <input
                     type="text"
@@ -353,7 +353,7 @@ export default function Record() {
               >
                 Performers
               </label>
-              <div className="mt-2">
+              <div>
                 <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-slate-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
                   <input
                     type="text"
@@ -374,7 +374,7 @@ export default function Record() {
               >
                 Time (minutes)
               </label>
-              <div className="mt-2">
+              <div>
                 <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-slate-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
                   <input
                     type="text"
@@ -390,11 +390,13 @@ export default function Record() {
             </div>
           </div>
         </div>
-        <input
-          type="submit"
-          value="Save Piece"
-          className="inline-flex items-center justify-center whitespace-nowrap text-md font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-slate-100 hover:text-accent-foreground h-9 rounded-md px-3 cursor-pointer mt-4"
-        />
+        <span className="float-right">
+          <input
+            type="submit"
+            value="Save Piece"
+            className="inline-flex items-center justify-center whitespace-nowrap text-md font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-red-700 hover:text-accent-foreground h-9 rounded-md px-3 cursor-pointer mt-4 bg-red-800 text-white"
+          />
+        </span>
       </form>
     </>
   );
